@@ -21,7 +21,7 @@ class ArFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
   override fun onAttachedToEngine(
     @NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
   ) {
-    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "measure_with_arcube")
+    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "ar_flutter_plugin")
     channel.setMethodCallHandler(this)
 
     this.flutterPluginBinding = flutterPluginBinding
@@ -49,7 +49,7 @@ class ArFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
     this.flutterPluginBinding.platformViewRegistry.registerViewFactory(
-      "measure_with_arcube", AndroidARViewFactory(binding.activity, flutterPluginBinding.binaryMessenger)
+      "ar_flutter_plugin", AndroidARViewFactory(binding.activity, flutterPluginBinding.binaryMessenger)
     )
   }
 
