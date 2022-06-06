@@ -2,7 +2,6 @@ package io.carius.lars.ar_flutter_plugin
 
 import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
-import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
@@ -20,9 +19,9 @@ class ArFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
   private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
 
   override fun onAttachedToEngine(
-      @NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
+    @NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
   ) {
-    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "ar_flutter_plugin")
+    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "measure_with_arcube")
     channel.setMethodCallHandler(this)
 
     this.flutterPluginBinding = flutterPluginBinding
@@ -50,7 +49,8 @@ class ArFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
     this.flutterPluginBinding.platformViewRegistry.registerViewFactory(
-        "ar_flutter_plugin", AndroidARViewFactory(binding.activity, flutterPluginBinding.binaryMessenger))
+      "measure_with_arcube", AndroidARViewFactory(binding.activity, flutterPluginBinding.binaryMessenger)
+    )
   }
 
   override fun onDetachedFromActivityForConfigChanges() {

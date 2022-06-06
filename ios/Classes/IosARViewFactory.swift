@@ -18,6 +18,7 @@ class IosARViewFactory: NSObject, FlutterPlatformViewFactory {
             frame: frame,
             viewIdentifier: viewId,
             arguments: args,
-            binaryMessenger: messenger)
+            binaryMessenger: messenger
+        )
     }
 }

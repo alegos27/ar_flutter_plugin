@@ -1,4 +1,7 @@
 export 'package:ar_flutter_plugin/widgets/ar_view.dart';
+export 'models/models.dart';
+export 'managers/managers.dart';
+export 'datatypes/datatypes.dart';
 
 import 'dart:async';
 

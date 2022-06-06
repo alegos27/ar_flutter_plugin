@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+import 'dart:developer';
 
 import 'package:ar_flutter_plugin/models/ar_anchor.dart';
 import 'package:ar_flutter_plugin/models/ar_node.dart';
@@ -137,6 +137,7 @@ class ARObjectManager {
         return await _channel.invokeMethod<bool>('addNode', node.toMap());
       }
     } on PlatformException catch (e) {
+      log(e.toString());
       return false;
     }
   }

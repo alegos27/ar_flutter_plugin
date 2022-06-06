@@ -19,7 +19,6 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
     var cancellableCollection = Set<AnyCancellable>() //Used to store all cancellables in (needed for working with Futures)
     var anchorCollection = [String: ARAnchor]() //Used to bookkeep all anchors created by Flutter calls
     
-    private var cloudAnchorHandler: CloudAnchorHandler? = nil
     private var arcoreSession: GARSession? = nil
     private var arcoreMode: Bool = false
     private var configuration: ARWorldTrackingConfiguration!
@@ -165,43 +164,6 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
             case "removeAnchor":
                 if let name = arguments!["name"] as? String {
                     deleteAnchor(anchorName: name)
-                }
-                break
-            case "initGoogleCloudAnchorMode":
-                arcoreSession = try! GARSession.session()
-
-                if (arcoreSession != nil){
-                    if let token = JWTGenerator().generateWebToken(){
-                        arcoreSession!.setAuthToken(token)
-                        
-                        cloudAnchorHandler = CloudAnchorHandler(session: arcoreSession!)
-                        arcoreSession!.delegate = cloudAnchorHandler
-                        arcoreSession!.delegateQueue = DispatchQueue.main
-                        
-                        arcoreMode = true
-                    } else {
-                        sessionManagerChannel.invokeMethod("onError", arguments: ["Error generating JWT, have you added cloudAnchorKey.json into the example/ios/Runner directory?"])
-                    }
-                } else {
-                    sessionManagerChannel.invokeMethod("onError", arguments: ["Error initializing Google AR Session"])
-                }
-                    
-                break
-            case "uploadAnchor":
-                if let anchorName = arguments!["name"] as? String, let anchor = anchorCollection[anchorName] {
-                    print("---------------- HOSTING INITIATED ------------------")
-                    if let ttl = arguments!["ttl"] as? Int {
-                        cloudAnchorHandler?.hostCloudAnchorWithTtl(anchorName: anchorName, anchor: anchor, listener: cloudAnchorUploadedListener(parent: self), ttl: ttl)
-                    } else {
-                        cloudAnchorHandler?.hostCloudAnchor(anchorName: anchorName, anchor: anchor, listener: cloudAnchorUploadedListener(parent: self))
-                    }
-                }
-                result(true)
-                break
-            case "downloadAnchor":
-                if let anchorId = arguments!["cloudanchorid"] as? String {
-                    print("---------------- RESOLVING INITIATED ------------------")
-                    cloudAnchorHandler?.resolveCloudAnchor(anchorId: anchorId, listener: cloudAnchorDownloadedListener(parent: self))
                 }
                 break
             default:
@@ -683,59 +645,6 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
             sceneView.session.remove(anchor: anchor)
             // Update bookkeeping
             anchorCollection.removeValue(forKey: anchorName)
-        }
-    }
-    
-    private class cloudAnchorUploadedListener: CloudAnchorListener {
-        private var parent: IosARView
-        
-        init(parent: IosARView) {
-            self.parent = parent
-        }
-        
-        func onCloudTaskComplete(anchorName: String?, anchor: GARAnchor?) {
-            if let cloudState = anchor?.cloudState {
-                if (cloudState == GARCloudAnchorState.success) {
-                    var args = Dictionary<String, String?>()
-                    args["name"] = anchorName
-                    args["cloudanchorid"] = anchor?.cloudIdentifier
-                    parent.anchorManagerChannel.invokeMethod("onCloudAnchorUploaded", arguments: args)
-                } else {
-                    print("Error uploading anchor, state: \(parent.decodeCloudAnchorState(state: cloudState))")
-                    parent.sessionManagerChannel.invokeMethod("onError", arguments: ["Error uploading anchor, state: \(parent.decodeCloudAnchorState(state: cloudState))"])
-                    return
-                }
-            }
-        }
-    }
-
-    private class cloudAnchorDownloadedListener: CloudAnchorListener {
-        private var parent: IosARView
-        
-        init(parent: IosARView) {
-            self.parent = parent
-        }
-        
-        func onCloudTaskComplete(anchorName: String?, anchor: GARAnchor?) {
-            if let cloudState = anchor?.cloudState {
-                if (cloudState == GARCloudAnchorState.success) {
-                    let newAnchor = ARAnchor(transform: anchor!.transform)
-                    // Register new anchor on the Flutter side of the plugin
-                    parent.anchorManagerChannel.invokeMethod("onAnchorDownloadSuccess", arguments: serializeAnchor(anchor: newAnchor, anchorNode: nil, ganchor: anchor!, name: anchorName), result: { result in
-                        if let anchorName = result as? String {
-                            self.parent.sceneView.session.add(anchor: newAnchor)
-                            self.parent.anchorCollection[anchorName] = newAnchor
-                        } else {
-                            self.parent.sessionManagerChannel.invokeMethod("onError", arguments: ["Error while registering downloaded anchor at the AR Flutter plugin"])
-                        }
-
-                    })
-                } else {
-                    print("Error downloading anchor, state \(cloudState)")
-                    parent.sessionManagerChannel.invokeMethod("onError", arguments: ["Error downloading anchor, state \(cloudState)"])
-                    return
-                }
-            }
         }
     }
     

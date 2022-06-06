@@ -40,23 +40,19 @@ class ARSessionManager {
     try {
       switch (call.method) {
         case 'onError':
-          if (onError != null) {
-            onError(call.arguments[0]);
-            print(call.arguments);
-          }
+          onError(call.arguments[0]);
+          print(call.arguments);
           break;
         case 'onPlaneOrPointTap':
-          if (onPlaneOrPointTap != null) {
-            final rawHitTestResults = call.arguments as List<dynamic>;
-            final serializedHitTestResults = rawHitTestResults
-                .map(
-                    (hitTestResult) => Map<String, dynamic>.from(hitTestResult))
-                .toList();
-            final hitTestResults = serializedHitTestResults.map((e) {
-              return ARHitTestResult.fromJson(e);
-            }).toList();
-            onPlaneOrPointTap(hitTestResults);
-          }
+          final rawHitTestResults = call.arguments as List<dynamic>;
+          final serializedHitTestResults = rawHitTestResults
+              .map(
+                  (hitTestResult) => Map<String, dynamic>.from(hitTestResult))
+              .toList();
+          final hitTestResults = serializedHitTestResults.map((e) {
+            return ARHitTestResult.fromJson(e);
+          }).toList();
+          onPlaneOrPointTap(hitTestResults);
           break;
         case 'dispose':
           _channel.invokeMethod<void>("dispose");
@@ -76,22 +72,16 @@ class ARSessionManager {
   /// [customPlaneTexturePath] refers to flutter assets from the app that is calling this function, NOT to assets within this plugin. Make sure
   /// the assets are correctly registered in the pubspec.yaml of the parent app (e.g. the ./example app in this plugin's repo)
   onInitialize({
-    bool showAnimatedGuide = true,
-    bool showFeaturePoints = false,
     bool showPlanes = true,
     String? customPlaneTexturePath,
-    bool showWorldOrigin = false,
     bool handleTaps = true,
     bool handlePans = false, // nodes are not draggable by default
     bool handleRotation = false, // nodes can not be rotated by default
   }) {
     _channel.invokeMethod<void>('init', {
-      'showAnimatedGuide': showAnimatedGuide,
-      'showFeaturePoints': showFeaturePoints,
       'planeDetectionConfig': planeDetectionConfig.index,
       'showPlanes': showPlanes,
       'customPlaneTexturePath': customPlaneTexturePath,
-      'showWorldOrigin': showWorldOrigin,
       'handleTaps': handleTaps,
       'handlePans': handlePans,
       'handleRotation': handleRotation,
