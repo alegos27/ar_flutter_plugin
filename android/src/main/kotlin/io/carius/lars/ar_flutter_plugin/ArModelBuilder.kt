@@ -11,6 +11,47 @@ import java.util.concurrent.CompletableFuture
 // Responsible for creating Renderables and Nodes
 class ArModelBuilder {
 
+    // Creates a coordinate system model at the world origin (X-axis: red, Y-axis: green, Z-axis:blue)
+    // The code for this function is adapted from Alexander's stackoverflow answer (https://stackoverflow.com/questions/48908358/arcore-how-to-display-world-origin-or-axes-in-debug-mode)
+    fun makeWorldOriginNode(context: Context): Node {
+        val axisSize = 0.1f
+        val axisRadius = 0.005f
+
+        val rootNode = Node()
+        val xNode = Node()
+        val yNode = Node()
+        val zNode = Node()
+
+        rootNode.addChild(xNode)
+        rootNode.addChild(yNode)
+        rootNode.addChild(zNode)
+
+        xNode.worldPosition = Vector3(axisSize / 2, 0f, 0f)
+        xNode.worldRotation = Quaternion.axisAngle(Vector3(0f, 0f, 1f), 90f)
+
+        yNode.worldPosition = Vector3(0f, axisSize / 2, 0f)
+
+        zNode.worldPosition = Vector3(0f, 0f, axisSize / 2)
+        zNode.worldRotation = Quaternion.axisAngle(Vector3(1f, 0f, 0f), 90f)
+
+        MaterialFactory.makeOpaqueWithColor(context, Color(255f, 0f, 0f))
+            .thenAccept { redMat ->
+                xNode.renderable = ShapeFactory.makeCylinder(axisRadius, axisSize, Vector3.zero(), redMat)
+            }
+
+        MaterialFactory.makeOpaqueWithColor(context, Color(axisRadius, 255f, 0f))
+            .thenAccept { greenMat ->
+                yNode.renderable = ShapeFactory.makeCylinder(axisRadius, axisSize, Vector3.zero(), greenMat)
+            }
+
+        MaterialFactory.makeOpaqueWithColor(context, Color(0f, 0f, 255f))
+            .thenAccept { blueMat ->
+                zNode.renderable = ShapeFactory.makeCylinder(axisRadius, axisSize, Vector3.zero(), blueMat)
+            }
+
+        return rootNode
+    }
+
     // Creates a node form a given gltf model path or URL. The gltf asset loading in Scenform is asynchronous, so the function returns a completable future of type Node
     fun makeNodeFromGltf(context: Context, name: String, modelPath: String, transformation: ArrayList<Double>): CompletableFuture<Node> {
         val completableFutureNode: CompletableFuture<Node> = CompletableFuture()

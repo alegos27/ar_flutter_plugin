@@ -24,8 +24,16 @@ class ARSessionManager {
   /// Receives hit results from user taps with tracked planes or feature points
   late ARHitResultHandler onPlaneOrPointTap;
 
-  ARSessionManager(int id, this.buildContext, this.planeDetectionConfig,
-      {this.debug = false}) {
+  /// Map of Cube Node for previewing as a pointer
+  final Map<String, dynamic> nodeMap;
+
+  ARSessionManager(
+    int id,
+    this.buildContext,
+    this.planeDetectionConfig,
+    this.nodeMap, {
+    this.debug = false,
+  }) {
     _channel = MethodChannel('arsession_$id');
     _channel.setMethodCallHandler(_platformCallHandler);
     if (debug) {
@@ -46,8 +54,7 @@ class ARSessionManager {
         case 'onPlaneOrPointTap':
           final rawHitTestResults = call.arguments as List<dynamic>;
           final serializedHitTestResults = rawHitTestResults
-              .map(
-                  (hitTestResult) => Map<String, dynamic>.from(hitTestResult))
+              .map((hitTestResult) => Map<String, dynamic>.from(hitTestResult))
               .toList();
           final hitTestResults = serializedHitTestResults.map((e) {
             return ARHitTestResult.fromJson(e);
@@ -72,19 +79,24 @@ class ARSessionManager {
   /// [customPlaneTexturePath] refers to flutter assets from the app that is calling this function, NOT to assets within this plugin. Make sure
   /// the assets are correctly registered in the pubspec.yaml of the parent app (e.g. the ./example app in this plugin's repo)
   onInitialize({
+    bool showAnimatedGuide = true,
     bool showPlanes = true,
     String? customPlaneTexturePath,
+    bool showWorldOrigin = false,
     bool handleTaps = true,
     bool handlePans = false, // nodes are not draggable by default
     bool handleRotation = false, // nodes can not be rotated by default
   }) {
     _channel.invokeMethod<void>('init', {
+      'showAnimatedGuide': showAnimatedGuide,
       'planeDetectionConfig': planeDetectionConfig.index,
       'showPlanes': showPlanes,
       'customPlaneTexturePath': customPlaneTexturePath,
+      'showWorldOrigin': showWorldOrigin,
       'handleTaps': handleTaps,
       'handlePans': handlePans,
       'handleRotation': handleRotation,
+      'nodeMap': nodeMap,
     });
   }
 

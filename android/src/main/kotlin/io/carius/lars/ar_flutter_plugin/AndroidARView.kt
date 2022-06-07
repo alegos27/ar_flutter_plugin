@@ -35,7 +35,8 @@ internal class AndroidARView(
     private val activity: Activity,
     context: Context,
     messenger: BinaryMessenger,
-    id: Int
+    id: Int,
+    creationParams: Map<String?, Any?>?
 ) : PlatformView {
     // constants
     private val tag: String = AndroidARView::class.java.name
@@ -52,9 +53,9 @@ internal class AndroidARView(
     private val initialPositionManagerChannel: MethodChannel =
         MethodChannel(messenger, "initialPosition")
 
-
     // UI variables
     private lateinit var arSceneView: ArSceneView
+    private var worldOriginNode = Node()
 
     //Added later
     private var isCubePlaced = false
@@ -396,9 +397,10 @@ internal class AndroidARView(
         nodeMap = call.argument<HashMap<String, Any>>("nodeMap")
         val argShowPlanes: Boolean? = call.argument<Boolean>("showPlanes")
         val argCustomPlaneTexturePath: String? = call.argument<String>("customPlaneTexturePath")
+        val argShowWorldOrigin: Boolean? = call.argument<Boolean>("showWorldOrigin")
         val argHandleTaps: Boolean? = call.argument<Boolean>("handleTaps")
 
-        arSceneView.scene.addOnUpdateListener { onFrame() }
+        arSceneView.scene.addOnUpdateListener { frameTime: FrameTime -> onFrame(frameTime) }
 
         // Configure plane detection
         val config = arSceneView.session?.config
@@ -455,6 +457,14 @@ internal class AndroidARView(
             }
         }
 
+        // Configure world origin
+        if (argShowWorldOrigin == true) {
+            worldOriginNode = modelBuilder.makeWorldOriginNode(viewContext)
+            arSceneView.scene.addChild(worldOriginNode)
+        } else {
+            worldOriginNode.setParent(null)
+        }
+
         // Configure Tap handling
         if (argHandleTaps == true) { // explicit comparison necessary because of nullable type
             arSceneView.scene.setOnTouchListener { hitTestResult: HitTestResult, motionEvent: MotionEvent? ->
@@ -469,7 +479,7 @@ internal class AndroidARView(
     }
 
 
-    private fun onFrame() {
+    private fun onFrame(frameTime: FrameTime) {
         val frame = arSceneView.arFrame!!
 
         val var3 = frame.getUpdatedTrackables(Plane::class.java).iterator()
