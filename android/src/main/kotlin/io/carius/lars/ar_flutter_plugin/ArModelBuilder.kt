@@ -4,7 +4,12 @@ import android.content.Context
 import android.net.Uri
 import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.assets.RenderableSource
+import com.google.ar.sceneform.math.Quaternion
+import com.google.ar.sceneform.math.Vector3
+import com.google.ar.sceneform.rendering.Color
+import com.google.ar.sceneform.rendering.MaterialFactory
 import com.google.ar.sceneform.rendering.ModelRenderable
+import com.google.ar.sceneform.rendering.ShapeFactory
 import io.carius.lars.ar_flutter_plugin.serialization.deserializeMatrix4
 import java.util.concurrent.CompletableFuture
 
